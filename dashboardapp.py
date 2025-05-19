@@ -6,17 +6,19 @@ import datetime
 st.set_page_config(page_title="Training Dashboard Uploader", layout="centered")
 st.title("📊 Training Dashboard Uploader")
 
-# Initial dashboard data (March, April, May) - replace with actual backend storage if needed
+# Initial dashboard data (March and April only)
 def get_initial_dashboard():
     return pd.DataFrame([
         {'Month': '2025-03', 'Total Trainings': 8, 'DXFleet': 2, 'Phoenix SQL Lite': 6, 'Cancellations': 0, 'No-Shows': 0, 'Pacific': 0, 'Mountain': 1, 'Central': 3, 'Eastern': 3},
-        {'Month': '2025-04', 'Total Trainings': 14, 'DXFleet': 6, 'Phoenix SQL Lite': 8, 'Cancellations': 2, 'No-Shows': 0, 'Pacific': 1, 'Mountain': 1, 'Central': 9, 'Eastern': 3},
-        {'Month': '2025-05', 'Total Trainings': 1, 'DXFleet': 1, 'Phoenix SQL Lite': 0, 'Cancellations': 0, 'No-Shows': 0, 'Pacific': 0, 'Mountain': 0, 'Central': 0, 'Eastern': 1}
+        {'Month': '2025-04', 'Total Trainings': 14, 'DXFleet': 6, 'Phoenix SQL Lite': 8, 'Cancellations': 2, 'No-Shows': 0, 'Pacific': 1, 'Mountain': 1, 'Central': 9, 'Eastern': 3}
     ])
 
 dashboard_df = get_initial_dashboard()
 st.subheader("Current Dashboard")
 st.dataframe(dashboard_df)
+
+st.download_button("Download Dashboard as Excel", data=dashboard_df.to_excel(index=False, engine='openpyxl'), file_name="Training_Dashboard.xlsx")
+st.download_button("Download Dashboard as CSV", data=dashboard_df.to_csv(index=False), file_name="Training_Dashboard.csv")
 
 st.markdown("---")
 uploaded_file = st.file_uploader("Upload a monthly training report (CSV)", type=["csv"])
@@ -62,9 +64,12 @@ if uploaded_file:
                 st.dataframe(pd.DataFrame([new_row]))
 
                 # Download updated dashboard
-                output = BytesIO()
-                dashboard_df.to_excel(output, index=False, engine='openpyxl')
-                st.download_button("Download Updated Dashboard", output.getvalue(), file_name="Updated_Training_Dashboard.xlsx")
+                excel_output = BytesIO()
+                dashboard_df.to_excel(excel_output, index=False, engine='openpyxl')
+                st.download_button("Download Updated Dashboard as Excel", data=excel_output.getvalue(), file_name="Updated_Training_Dashboard.xlsx")
+
+                csv_output = dashboard_df.to_csv(index=False)
+                st.download_button("Download Updated Dashboard as CSV", data=csv_output, file_name="Updated_Training_Dashboard.csv")
 
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")

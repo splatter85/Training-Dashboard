@@ -122,7 +122,7 @@ for col, color in COLUMN_COLORS.items():
         styled_df = styled_df.set_properties(subset=[col], **{'background-color': color})
 
 # Format numbers as integers
-styled_df = styled_df.format({col: '{:.0f}' for col in dashboard_display.columns if col != 'Month'})
+styled_df = styled_df.format(lambda x: f'{int(x)}' if isinstance(x, (int, float)) and not pd.isnull(x) else x)
 
 st.subheader("Current Dashboard")
 st.dataframe(styled_df, use_container_width=True)

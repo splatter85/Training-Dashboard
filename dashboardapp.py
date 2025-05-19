@@ -91,10 +91,10 @@ def style_excel_file(df):
     wb.save(stream)
     return stream.getvalue()
 
-
 # Load dashboard
 dashboard_df = get_initial_dashboard()
 
+# Remove total rows if they exist
 if not dashboard_df.empty and dashboard_df.iloc[-1][0] == 'TOTAL':
     dashboard_data = dashboard_df.iloc[:-2]
 else:
@@ -118,7 +118,7 @@ for col, color in COLUMN_COLORS.items():
     if col in dashboard_display.columns:
         styled_df = styled_df.set_properties(subset=[col], **{'background-color': color})
 st.subheader("Current Dashboard")
-st.dataframe(styled_df)
+st.dataframe(styled_df, use_container_width=True)
 
 # Downloads
 st.download_button("Download Dashboard as CSV", data=dashboard_display.to_csv(index=False), file_name="Training_Dashboard.csv")
@@ -169,10 +169,8 @@ if uploaded_file:
                 total_row.iloc[0, 0] = 'TOTAL'
                 final_dashboard = pd.concat([updated_data, pd.DataFrame([[''] * len(updated_data.columns)], columns=updated_data.columns), total_row], ignore_index=True)
 
-                st.success(f"Data for {target_month} added successfully!")
-                st.dataframe(pd.DataFrame([new_row]))
-
                 push_updated_dashboard_to_github(final_dashboard)
+                st.experimental_rerun()
 
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")

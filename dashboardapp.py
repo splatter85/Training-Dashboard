@@ -177,7 +177,7 @@ if uploaded_file:
                 final_dashboard = pd.concat([updated_data, pd.DataFrame([[''] * len(updated_data.columns)], columns=updated_data.columns), total_row], ignore_index=True)
 
                 push_updated_dashboard_to_github(final_dashboard)
-                st.experimental_rerun()
+                st.rerun()
 
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")

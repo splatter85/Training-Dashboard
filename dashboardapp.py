@@ -134,4 +134,45 @@ if uploaded_file:
         df['Month'] = df['Start Date & Time'].dt.to_period('M').astype(str)
 
         if df['Month'].nunique() != 1:
-            st.error("The file must contain data from only one month
+            st.error("The file must contain data from only one month.")
+        else:
+            target_month = df['Month'].iloc[0]
+            if target_month in dashboard_data['Month'].values:
+                st.error(f"Data from {target_month} is already in the dashboard.")
+            else:
+                num_dxfleet = df['Event Type Name'].str.contains('DXFleet', case=False, na=False).sum()
+                num_phoenix = df['Event Type Name'].str.contains('Phoenix SQL Lite', case=False, na=False).sum()
+                num_cancellations = (df['Canceled'] == True).sum() if 'Canceled' in df.columns else 0
+                num_noshows = (df['Marked as No-Show'].str.lower() == 'yes').sum()
+                tz_counts = df['Invitee Time Zone'].value_counts()
+                tz_pacific = tz_counts.get('Pacific Time - US & Canada', 0)
+                tz_mountain = tz_counts.get('Mountain Time - US & Canada', 0)
+                tz_central = tz_counts.get('Central Time - US & Canada', 0)
+                tz_eastern = tz_counts.get('Eastern Time - US & Canada', 0)
+
+                new_row = {
+                    'Month': target_month,
+                    'Total Trainings': len(df),
+                    'DXFleet': num_dxfleet,
+                    'Phoenix SQL Lite': num_phoenix,
+                    'Cancellations': num_cancellations,
+                    'No-Shows': num_noshows,
+                    'Pacific': tz_pacific,
+                    'Mountain': tz_mountain,
+                    'Central': tz_central,
+                    'Eastern': tz_eastern
+                }
+
+                updated_data = pd.concat([dashboard_data, pd.DataFrame([new_row])], ignore_index=True)
+                totals = updated_data.drop(columns='Month').sum(numeric_only=True)
+                total_row = pd.DataFrame([[''] + totals.tolist()], columns=updated_data.columns)
+                total_row.iloc[0, 0] = 'TOTAL'
+                final_dashboard = pd.concat([updated_data, pd.DataFrame([[''] * len(updated_data.columns)], columns=updated_data.columns), total_row], ignore_index=True)
+
+                st.success(f"Data for {target_month} added successfully!")
+                st.dataframe(pd.DataFrame([new_row]))
+
+                push_updated_dashboard_to_github(final_dashboard)
+
+    except Exception as e:
+        st.error(f"An error occurred while processing the file: {e}")

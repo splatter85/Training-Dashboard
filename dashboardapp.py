@@ -72,20 +72,23 @@ def style_excel_file(df):
     ws = wb.active
     ws.title = "Dashboard"
 
+    # Write headers
     for col_num, col_name in enumerate(df.columns, 1):
         cell = ws.cell(row=1, column=col_num, value=col_name)
-        fill_color = COLUMN_COLORS.get(col_name, None)
-        if fill_color:
-            cell.fill = PatternFill(start_color=fill_color[1:], end_color=fill_color[1:], fill_type="solid")
         cell.font = Font(bold=True)
 
+    # Write data and apply column coloring
     for row_idx, row in df.iterrows():
-        for col_idx, value in enumerate(row, 1):
+        for col_idx, (col_name, value) in enumerate(row.items(), 1):
             cell = ws.cell(row=row_idx + 2, column=col_idx, value=value)
             if str(value).strip().upper() == "TOTAL":
                 for style_cell in ws[row_idx + 2]:
                     style_cell.font = Font(bold=True)
                     style_cell.fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
+            else:
+                fill_color = COLUMN_COLORS.get(col_name, None)
+                if fill_color:
+                    cell.fill = PatternFill(start_color=fill_color[1:], end_color=fill_color[1:], fill_type="solid")
 
     stream = BytesIO()
     wb.save(stream)

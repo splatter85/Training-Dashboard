@@ -1,86 +1,32 @@
-# Training-Dashboard
-This Streamlit web app allows you to maintain a monthly training summary dashboard by uploading individual training report CSVs. The app extracts key metrics from each uploaded report and appends a new row to the dashboard—only if that month’s data has not already been added.
+# Training Dashboard
 
-🚀 Features
-Drag-and-drop interface to upload monthly training reports
+This Streamlit app reads the shared monthly training summary from this repository. Upload a report to preview a new month's aggregate counts and download the updated dashboard as CSV or Excel. Uploads do not write to GitHub or change the shared dashboard.
 
-Automatically calculates:
+The app calculates total trainings, DXFleet and Phoenix SQL Lite sessions, cancellations, no-shows, and U.S. time-zone counts. It rejects a month already present in the shared dashboard.
 
-Total trainings
+## Report format
 
-Count of DXFleet and Phoenix SQL Lite sessions
+Upload a CSV containing exactly one month's data and these columns:
 
-Number of cancellations and no-shows
+- `Start Date & Time`
+- `Event Type Name`
+- `Canceled`
+- `Marked as No-Show`
+- `Invitee Time Zone`
 
-Distribution across U.S. time zones
+## Run
 
-Prevents duplicate entries with a clear error message
+Use a supported Python version:
 
-Displays the updated dashboard
-
-Download the updated dashboard as an Excel file
-
-📂 How It Works
-Upload a .csv file containing training data for a single month.
-
-The app reads the data, validates the month, and processes the following fields:
-
-Start Date & Time (used to determine the reporting month)
-
-Event Type Name
-
-Canceled
-
-Marked as No-Show
-
-Invitee Time Zone
-
-If the month does not already exist in the dashboard, a new row is added.
-
-Download the updated dashboard with one click.
-
-✅ CSV Format Requirements
-Your uploaded file must:
-
-Be a .csv file
-
-Contain only one month's worth of data
-
-Include the following columns (case-sensitive):
-
-Start Date & Time
-
-Event Type Name
-
-Canceled
-
-Marked as No-Show
-
-Invitee Time Zone
-
-🛠 Setup Instructions
-Requirements
-Python 3.8+
-
-streamlit
-
-pandas
-
-openpyxl
-
-Local Setup
-bash
-Copy
-Edit
+```sh
 pip install -r requirements.txt
-streamlit run app.py
-Streamlit Cloud
-To deploy online:
+streamlit run dashboardapp.py
+```
 
-Push this repo to GitHub
+For Streamlit Community Cloud, select `dashboardapp.py` as the entry point. This app requires no GitHub write token. Remove any obsolete `GITHUB_TOKEN` from the deployment's secrets and revoke its credential if it was dedicated to this app. Publishing a downloaded aggregate dashboard is a separate owner-reviewed repository change; do not commit individual training reports.
 
-Go to streamlit.io/cloud
+## Verify the read-only boundary
 
-Click “New app” and select this repo
-
-Deploy and share the app link
+```sh
+python -m unittest discover -s tests -v
+```

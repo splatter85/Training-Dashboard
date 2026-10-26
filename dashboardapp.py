@@ -1,15 +1,12 @@
 import streamlit as st
 import pandas as pd
 from io import BytesIO
-import datetime
-import base64
-import requests
-import json
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font
 
 st.set_page_config(page_title="Training Dashboard Uploader", layout="centered")
 st.title("📊 Training Dashboard Uploader")
+st.info("Upload a report to preview and download an updated dashboard. Uploads do not change the shared dashboard.")
 
 # --- GitHub Config ---
 GITHUB_REPO = "splatter85/Training-Dashboard"
@@ -36,35 +33,6 @@ def get_initial_dashboard():
         return pd.read_csv(url)
     except:
         return pd.DataFrame(columns=['Month', 'Total Trainings', 'DXFleet', 'Phoenix SQL Lite', 'Cancellations', 'No-Shows', 'Pacific', 'Mountain', 'Central', 'Eastern'])
-
-
-def push_updated_dashboard_to_github(updated_df):
-    token = st.secrets["GITHUB_TOKEN"]
-    headers = {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-
-    api_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{DASHBOARD_FILE_PATH}"
-    get_resp = requests.get(api_url, headers=headers)
-    sha = get_resp.json().get("sha") if get_resp.status_code == 200 else None
-
-    csv_data = updated_df.to_csv(index=False)
-    encoded_content = base64.b64encode(csv_data.encode()).decode()
-
-    payload = {
-        "message": "Update Training Dashboard via Streamlit",
-        "content": encoded_content,
-        "branch": GITHUB_BRANCH
-    }
-    if sha:
-        payload["sha"] = sha
-
-    put_resp = requests.put(api_url, headers=headers, data=json.dumps(payload))
-    if put_resp.status_code in [200, 201]:
-        st.success("✅ Dashboard saved to GitHub!")
-    else:
-        st.error(f"❌ Failed to save dashboard to GitHub: {put_resp.json()}")
 
 
 def style_excel_file(df):
@@ -98,7 +66,7 @@ def style_excel_file(df):
 dashboard_df = get_initial_dashboard()
 
 # Remove total rows if they exist
-if not dashboard_df.empty and dashboard_df.iloc[-1][0] == 'TOTAL':
+if not dashboard_df.empty and dashboard_df.iloc[-1, 0] == 'TOTAL':
     dashboard_data = dashboard_df.iloc[:-2]
 else:
     dashboard_data = dashboard_df.copy()
@@ -176,8 +144,10 @@ if uploaded_file:
                 total_row.iloc[0, 0] = 'TOTAL'
                 final_dashboard = pd.concat([updated_data, pd.DataFrame([[''] * len(updated_data.columns)], columns=updated_data.columns), total_row], ignore_index=True)
 
-                push_updated_dashboard_to_github(final_dashboard)
-                st.rerun()
+                st.subheader("Updated Dashboard Preview")
+                st.dataframe(final_dashboard, use_container_width=True)
+                st.download_button("Download Updated Dashboard as CSV", data=final_dashboard.to_csv(index=False), file_name="Training_Dashboard_updated.csv")
+                st.download_button("Download Updated Dashboard as Excel", data=style_excel_file(final_dashboard), file_name="Training_Dashboard_updated.xlsx")
 
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")
